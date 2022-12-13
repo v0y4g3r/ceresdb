@@ -131,10 +131,12 @@ macro_rules! get_min_max_values {
         let scalar_values: Vec<ScalarValue> = $self
             .row_group_metadata
             .iter()
-            .flat_map(|meta| meta.column(column_index).statistics())
-            .map(|stats| get_statistic!(stats, $func, $bytes_func))
+            .map(|meta| {
+                let stats = meta.column(column_index).statistics()?;
+                get_statistic!(stats, $func, $bytes_func)
+            })
             .map(|maybe_scalar| {
-                // column either did't have statistics at all or didn't have min/max values
+                // column either didn't have statistics at all or didn't have min/max values
                 maybe_scalar.unwrap_or_else(|| null_scalar.clone())
             })
             .collect();
